@@ -1,17 +1,17 @@
 package com.priyu.weatherapp;
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.android.volley.Request;
 import com.android.volley.Response;
-import com.android.volley.VolleyError;
 import com.android.volley.toolbox.JsonObjectRequest;
 
 import org.json.JSONArray;
@@ -22,7 +22,6 @@ public class MainActivity extends AppCompatActivity {
     EditText city;
     Button btn1;
     weatherSingleton weatherSingleton;
-    TextView result;
 
 
     String baseUrl ="https://api.openweathermap.org/data/2.5/weather?q=";
@@ -36,12 +35,15 @@ public class MainActivity extends AppCompatActivity {
 
         btn1 = findViewById(R.id.getcity);
         city = findViewById(R.id.city);
-        result = findViewById(R.id.result);
 
         btn1.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String myURL = baseUrl + city.getText().toString() +Api;
+               String  val = city.getText().toString();
+                if(TextUtils.isEmpty(val)){
+                    city.setError(" Enter city name ");
+                }
+                String myURL = baseUrl + val +Api;
 
                 JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, myURL, null, new Response.Listener<JSONObject>() {
                     @Override
@@ -54,11 +56,13 @@ public class MainActivity extends AppCompatActivity {
                             for(int i = 0; i < ar.length(); i++)
                             {
                                 JSONObject jobj = ar.getJSONObject(i);
-                                String myweather = jobj.getString("main");
-                                result.setText(myweather);
+                                String myweather = jobj.getString( "main");
+                                Intent intent = new Intent(MainActivity.this,MainActivity2.class);
+                                intent.putExtra("main",myweather);
+                                startActivity(intent);
                                 Log.i("ID","ID" + jobj.getString("id"));
                                 Log.i("MAIN","MAIN" + jobj.getString("main"));
-                                Log.i("description","description" + jobj.getString("description"));
+                                Log.i("description","Description" + jobj.getString("description"));
                             }
 
                         } catch (JSONException e) {
@@ -66,13 +70,7 @@ public class MainActivity extends AppCompatActivity {
                         }
                     }
                 },
-                        new Response.ErrorListener()
-                        {
-                            @Override
-                            public void onErrorResponse(VolleyError error) {
-                                Log.i("Error","Something went wrong"+ error);
-                            }
-                        }
+                        error -> Log.i("Error","Something went wrong"+ error)
                 );
             com.priyu.weatherapp.weatherSingleton.getInstance(MainActivity.this).addToRequestQueue(jsonObjectRequest);
             }
